@@ -321,7 +321,7 @@ def get_all_trial_paths(directory_path, randomized_profile_id):
     
     The function ensures proper randomization while maintaining experimental constraints:
     - All participants get the same familiarization trials in order
-    - Experimental trials are randomized ONCE (same order for all participants)
+    - Experimental trial order is randomized per participant (seed = base_seed + randomized_profile_id)
     """
     try:
         # Convert relative path to absolute path based on this Python file's location
@@ -330,7 +330,8 @@ def get_all_trial_paths(directory_path, randomized_profile_id):
         
         # Get all trial folders in the dataset directory
         entries = os.listdir(absolute_directory_path)
-        random_ = random.Random(314159)  # Consistent seed for reproducible randomization
+        # Seed per participant so each gets a different trial order; still reproducible for same profile_id
+        random_ = random.Random(314159 + int(randomized_profile_id))
 
         # V2/V3: Use explicit familiarization trial order if enabled
         if USE_V3_FAM_TRIALS:
@@ -358,11 +359,9 @@ def get_all_trial_paths(directory_path, randomized_profile_id):
             if any(entry.startswith(prefix) for prefix in EXP_TRIAL_PREFIXES)
         ]
 
-        # Shuffle e_folders ONCE for all participants
+        # Shuffle e_folders per participant (seed depends on randomized_profile_id)
         e_folders_shuffled = e_folders[:]
         random_.shuffle(e_folders_shuffled)
-
-        # All participants get the same shuffled order
         # V2: Handle None entries (image-only pages) by keeping them as None in the paths list
         f_paths = [
             os.path.join(os.path.join(absolute_directory_path, entry), 'simulation_data.json') if entry is not None else None

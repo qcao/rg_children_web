@@ -45,5 +45,8 @@ export const config = {
   // Ending audio file path relative to public folder (e.g., '/ending_audio.mp3')
   // Set to null or empty string to use default sine wave tone (500Hz, 50ms)
   endingAudioPath: '/ending_audio.mp3',
+  showCoinTubes: true,
+  coinInterval: 1.0,
+  tubeSfx: false,
 };
 

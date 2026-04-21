@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { config } from '../config';
+import CoinCollectorTubes from './CoinCollectorTubes';
 import useUpdateKeyStates from '../hooks/useUpdateKeyStates';
 import { usePause } from '../contexts/PauseContext';
 /**
@@ -9,7 +10,7 @@ import { usePause } from '../contexts/PauseContext';
  * No audio
  * Behavior: 3-2-1 countdown, interactive canvas with key tracking, congratulations, auto-advance
  */
-const P10V3Page = ({ onComplete }) => {
+const P10V3Page = ({ onComplete, onTubeRevealComplete }) => {
     const { isPaused, resumeCounter } = usePause();
     
     // Only log on actual mount, not every render
@@ -43,6 +44,7 @@ const P10V3Page = ({ onComplete }) => {
     const currentFrameRef = useRef(0);
     const [isPlaying, setIsPlaying] = useState(false);
     const [videoFinished, setVideoFinished] = useState(false);
+    const [tubeRevealDone, setTubeRevealDone] = useState(!config.showCoinTubes);
     const [showCongratulations, setShowCongratulations] = useState(false);
     const [keyStates, setKeyStates] = useState({ f: false, j: false });
     const [countdown, setCountdown] = useState(null);
@@ -474,6 +476,7 @@ const P10V3Page = ({ onComplete }) => {
             setCurrentFrame(0);
             currentFrameRef.current = 0;
             setVideoFinished(false);
+            setTubeRevealDone(!config.showCoinTubes);
             setShowCongratulations(false);
             hasAutoAdvancedRef.current = false;
             lastTimestampRef.current = null;
@@ -544,10 +547,11 @@ const P10V3Page = ({ onComplete }) => {
             setCurrentFrame(0);
             currentFrameRef.current = 0;
             setVideoFinished(false);
+            setTubeRevealDone(!config.showCoinTubes);
             setShowCongratulations(false);
             hasAutoAdvancedRef.current = false;
             lastTimestampRef.current = null;
-            
+
             if (renderFrameRef.current) {
                 renderFrameRef.current(0);
             }
@@ -558,11 +562,11 @@ const P10V3Page = ({ onComplete }) => {
 
     // Show congratulations when video finishes
     useEffect(() => {
-        if (videoFinished && !showCongratulations) {
+        if (videoFinished && tubeRevealDone && !showCongratulations) {
             console.log("🎉 P10V3Page: Video finished, showing congratulations");
             setShowCongratulations(true);
         }
-    }, [videoFinished, showCongratulations]);
+    }, [videoFinished, tubeRevealDone, showCongratulations]);
 
     // Auto-advance after congratulations
     useEffect(() => {
@@ -643,6 +647,23 @@ const P10V3Page = ({ onComplete }) => {
                     height={canvasSize.height}
                     style={{ display: "block" }}
                 />
+                {config.showCoinTubes && (
+                    <CoinCollectorTubes
+                        fKeyHeld={keyStates.f}
+                        jKeyHeld={keyStates.j}
+                        isPlaying={isPlaying}
+                        trialEnded={videoFinished}
+                        rgOutcome={sceneData?.rg_outcome || 'green'}
+                        coinInterval={config.coinInterval || 1.0}
+                        sfx={config.tubeSfx || false}
+                        canvasHeight={canvasSize.height}
+                        borderThickness={config.canvasBorderThickness || 0}
+                        onRevealComplete={(result) => {
+                            setTubeRevealDone(true);
+                            if (onTubeRevealComplete) onTubeRevealComplete(result);
+                        }}
+                    />
+                )}
                 
                 {/* White overlay during countdown */}
                 {countdown !== null && (

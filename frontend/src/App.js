@@ -808,6 +808,7 @@ const renderCurrentPage = () => {
         redSensorTextureRef={redSensorTextureRef}
         greenSensorTextureRef={greenSensorTextureRef}
         barrierTextureRef={barrierTextureRef}
+        onTubeRevealComplete={() => {}}
       />;
     case 'timeout':
       return <TimeoutPage />;

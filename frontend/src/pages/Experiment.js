@@ -3,6 +3,7 @@ import TransitionPage from './Transition';
 import { config } from '../config';
 import { getFamiliarizationPageType } from '../utils/familiarizationPageTypes';
 import VisualCountdownRing from '../components/VisualCountdownRing';
+import CoinCollectorTubes from '../components/CoinCollectorTubes';
 import P3V3Page from '../components/P3V3Page';
 import P4V3Page from '../components/P4V3Page';
 import P5V3Page from '../components/P5V3Page';
@@ -36,7 +37,8 @@ const ExperimentPage = ({
     isStrictMode,
     redSensorTextureRef,
     greenSensorTextureRef,
-    barrierTextureRef
+    barrierTextureRef,
+    onTubeRevealComplete,
 }) => {
 
     const isInitializedRef = useRef(false);
@@ -45,6 +47,7 @@ const ExperimentPage = ({
     const [nextTrialCountdown, setNextTrialCountdown] = useState(null); // 5,4,3,2,1 then auto-advance; null when not counting
     const nextTrialIntervalRef = useRef(null);
     const skipHeldRef = useRef(false);
+    const [tubeRevealDone, setTubeRevealDone] = useState(!config.showCoinTubes);
 
     useEffect(() => {
         strictModeRenderCount.current += 1;
@@ -151,6 +154,7 @@ const ExperimentPage = ({
     useEffect(() => {
         if (!finished) {
             setNextTrialCountdown(null);
+            setTubeRevealDone(!config.showCoinTubes);
             if (nextTrialIntervalRef.current) {
                 clearInterval(nextTrialIntervalRef.current);
                 nextTrialIntervalRef.current = null;
@@ -223,13 +227,13 @@ const ExperimentPage = ({
     if (isP3) return <P3V3Page onComplete={() => fetchNextScene(setdisableCountdownTrigger)} />;
     if (isP4) return <P4V3Page onComplete={() => fetchNextScene(setdisableCountdownTrigger)} />;
     if (isP5) return <P5V3Page onComplete={() => fetchNextScene(setdisableCountdownTrigger)} />;
-    if (isP6) return <P6V3Page onComplete={() => fetchNextScene(setdisableCountdownTrigger)} />;
-    if (isP7) return <P7V3Page onComplete={() => fetchNextScene(setdisableCountdownTrigger)} />;
+    if (isP6) return <P6V3Page onComplete={() => fetchNextScene(setdisableCountdownTrigger)} onTubeRevealComplete={onTubeRevealComplete} />;
+    if (isP7) return <P7V3Page onComplete={() => fetchNextScene(setdisableCountdownTrigger)} onTubeRevealComplete={onTubeRevealComplete} />;
     if (isP8) return <P8V3Page onComplete={() => fetchNextScene(setdisableCountdownTrigger)} />;
-    if (isP9) return <P9V3Page onComplete={() => fetchNextScene(setdisableCountdownTrigger)} />;
-    if (isP10) return <P10V3Page onComplete={() => fetchNextScene(setdisableCountdownTrigger)} />;
+    if (isP9) return <P9V3Page onComplete={() => fetchNextScene(setdisableCountdownTrigger)} onTubeRevealComplete={onTubeRevealComplete} />;
+    if (isP10) return <P10V3Page onComplete={() => fetchNextScene(setdisableCountdownTrigger)} onTubeRevealComplete={onTubeRevealComplete} />;
     if (isP11) return <P11V3Page onComplete={() => fetchNextScene(setdisableCountdownTrigger)} />;
-    if (isP12) return <P12V3Page onComplete={() => fetchNextScene(setdisableCountdownTrigger)} />;
+    if (isP12) return <P12V3Page onComplete={() => fetchNextScene(setdisableCountdownTrigger)} onTubeRevealComplete={onTubeRevealComplete} />;
     if (isP13) return <P13V3Page onComplete={() => fetchNextScene(setdisableCountdownTrigger)} />;
 
     if (trialInfo.is_ftrial) {
@@ -342,7 +346,7 @@ const ExperimentPage = ({
                 })()}
             </div>
 
-            {finished && !(trialInfo.is_ftrial && trialInfo.ftrial_i === 1) && (
+            {finished && tubeRevealDone && !(trialInfo.is_ftrial && trialInfo.ftrial_i === 1) && (
                 <div style={{
                     position: "absolute",
                     top: 0,
@@ -432,7 +436,7 @@ const ExperimentPage = ({
             )}
             
             {/* Only after the first trial ends */}
-            {finished && (trialInfo.is_ftrial && trialInfo.ftrial_i === 1) && (
+            {finished && tubeRevealDone && (trialInfo.is_ftrial && trialInfo.ftrial_i === 1) && (
                <div style={{
                 position: "absolute",
                 top: 0,
@@ -630,6 +634,23 @@ const ExperimentPage = ({
                                 zIndex: 1,
                             }}
                         />
+                        {config.showCoinTubes && !trialInfo.is_ftrial && (
+                            <CoinCollectorTubes
+                                fKeyHeld={keyStates.f}
+                                jKeyHeld={keyStates.j}
+                                isPlaying={isPlaying}
+                                trialEnded={finished}
+                                rgOutcome={sceneData?.rg_outcome || 'green'}
+                                coinInterval={config.coinInterval || 1.0}
+                                sfx={config.tubeSfx || false}
+                                canvasHeight={canvasSize.height}
+                                borderThickness={config.canvasBorderThickness || 0}
+                                onRevealComplete={(result) => {
+                                    setTubeRevealDone(true);
+                                    if (onTubeRevealComplete) onTubeRevealComplete(result);
+                                }}
+                            />
+                        )}
                     </div>
                 </div>
 
